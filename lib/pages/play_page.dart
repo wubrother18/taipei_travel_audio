@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:taipei_travel_audio/services/audio_service.dart';
 
@@ -13,11 +15,22 @@ class PlayPage extends StatefulWidget {
   State<PlayPage> createState() => _PlayPageState();
 }
 
-class _PlayPageState extends State<PlayPage> {
+class _PlayPageState extends State<PlayPage> with TickerProviderStateMixin {
+  late AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat();
+  }
 
   @override
   void dispose() {
     AudioService().stop();
+    _animController.dispose();
     super.dispose();
   }
 
@@ -60,6 +73,17 @@ class _PlayPageState extends State<PlayPage> {
               width: double.infinity,
               height: 200,
               color: Colors.black,
+              child: AnimatedBuilder(
+                animation: _animController,
+                builder: (context, child) {
+                  return CustomPaint(
+                    painter: WavePainter(
+                      animValue: _animController.value,
+                      isPlaying: AudioService().isPlaying,
+                    ),
+                  );
+                },
+              ),
             ),
             Spacer(),
             Text(
@@ -143,5 +167,46 @@ class _PlayPageState extends State<PlayPage> {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$m:$s';
+  }
+}
+
+class WavePainter extends CustomPainter {
+  final double animValue;
+  final bool isPlaying;
+
+  WavePainter({required this.animValue, required this.isPlaying});
+
+  @override
+  bool shouldRepaint(WavePainter oldDelegate) {
+    return animValue != oldDelegate.animValue || isPlaying != oldDelegate.isPlaying;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withAlpha((255*(1-animValue)).toInt())
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    final barCount = 30;
+    final barWidth = size.width / (barCount * 2);
+
+    for (int i = 0; i < barCount; i++) {
+      final x = barWidth + i * (size.width - barWidth * 2) / (barCount - 1);
+
+
+      double height;
+      if (isPlaying) {
+        final wave = sin((i * 0.3) + (animValue * 2 * pi));
+        height = (0.3 + 0.7 * ((wave + 1) / 2)) * size.height * 0.4;
+      } else {
+        height = size.height * 0.05;
+      }
+      canvas.drawLine(
+        Offset(x, size.height / 2 - height),
+        Offset(x, size.height / 2 + height),
+        paint,
+      );
+    }
   }
 }
