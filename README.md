@@ -4,18 +4,8 @@
 
 ## Demo
 
-<img src="Screen_recording_20260528_154031.gif" width="300" />
+<img src="Screen_recording_20260528_163121.gif" width="300" />
 
-## 環境
-
-- Flutter 3.12+
-
-## 啟動
-
-```bash
-flutter pub get
-flutter run
-```
 
 ## 功能
 
@@ -48,3 +38,4 @@ flutter run
 - 下載檔案以 `{id}_{title}` 命名，啟動時掃描資料夾還原已下載狀態與標題
 - 語系切換時清空列表從第 1 頁重新載入
 - API/下載錯誤透過 `ref.listen` 監聽 `message` 變化，以 SnackBar 通知
+- 加入本地檔案管理，確保使用者能有檔案的完整操作權限
