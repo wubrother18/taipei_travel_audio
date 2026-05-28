@@ -93,7 +93,7 @@ class _PlayPageState extends State<PlayPage> with TickerProviderStateMixin {
             ),
             SizedBox(height: 4),
             Text(
-              "${widget.id}.mp3",
+              "${widget.id}_${widget.title}.mp3",
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.grey),
             ),
             SizedBox(height: 24),
