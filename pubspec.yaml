@@ -30,24 +30,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations: # localization
-    sdk: flutter         # localization
+  flutter_localizations:
+    sdk: flutter
 
   flutter_riverpod: ^3.3.1
   rxdart: ^0.28.0
 
-  #storage related
-  shared_preferences: ^2.5.4
-  sqflite: ^2.4.2
-
   #file and url related
   url_launcher: ^6.3.2
   path_provider: ^2.1.5
-  mime: ^2.0.0
 
   #web & network
   dio: ^5.9.0
-  flutter_spinkit: ^5.2.2
 
   #audio
   just_audio: ^0.10.5
