@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:taipei_travel_audio/model/audio_model.dart';
+import 'package:taipei_travel_audio/pages/local_page.dart';
 import 'package:taipei_travel_audio/pages/play_page.dart';
 import 'package:taipei_travel_audio/providers/audio_provider.dart';
 import 'package:taipei_travel_audio/services/audio_service.dart';
@@ -43,9 +45,9 @@ class _ListPageState extends ConsumerState<ListPage> {
 
     ref.listen<AudioState>(audioProvider, (prev, next) {
       if (next.message != null && next.message != prev?.message) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.message!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.message!)));
       }
     });
 
@@ -54,10 +56,10 @@ class _ListPageState extends ConsumerState<ListPage> {
         elevation: 1,
         titleSpacing: 0,
         shadowColor: Colors.black,
-        flexibleSpace: Container(color: Colors.white,),
+        flexibleSpace: Container(color: Colors.white),
         title: Row(
           children: [
-            SizedBox(width: 16,),
+            SizedBox(width: 16),
             Text(
               "FUNDAY",
               style: TextStyle(
@@ -69,14 +71,44 @@ class _ListPageState extends ConsumerState<ListPage> {
               ),
             ),
           ],
-        )
+        ),
+        actions: [
+          DropdownButton<String>(
+            value: audioState.lang,
+            underline: SizedBox(),
+            items: langOptions.entries
+                .map(
+                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                )
+                .toList(),
+            onChanged: (value) {
+              if (value != null) {
+                ref.read(audioProvider.notifier).setLang(value);
+              }
+            },
+          ),
+          SizedBox(width: 8),
+          TextButton(
+            onPressed: () {
+              gotoLocal();
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.grey.shade200,
+              shape: const CircleBorder(),
+            ),
+            child: Icon(
+            Icons.folder,
+              size: 24,
+              color: Colors.black,
+            ),
+          ),
+          SizedBox(width: 8),
+        ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(audioProvider.notifier).fetchList(clean: true),
-        child: Container(
-          color: Colors.white,
-          child: _buildContent(audioState),
-        ),
+        onRefresh: () =>
+            ref.read(audioProvider.notifier).fetchList(clean: true),
+        child: Container(color: Colors.white, child: _buildContent(audioState)),
       ),
     );
   }
@@ -91,7 +123,12 @@ class _ListPageState extends ConsumerState<ListPage> {
       return ListView(
         children: const [
           SizedBox(height: 200),
-          Center(child: Text('No data', style: TextStyle(fontSize: 16, color: Colors.grey),)),
+          Center(
+            child: Text(
+              'No data',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ),
         ],
       );
     }
@@ -113,56 +150,72 @@ class _ListPageState extends ConsumerState<ListPage> {
   Widget listItem(AudioState audioState, Map data) {
     final int id = data['id'];
     final bool isPending = audioState.pendingList.contains(id);
-    final bool isLocal = audioState.localList.contains(id);
+    final bool isLocal = audioState.localList.containsKey(id);
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE0E0E0)),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0))),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Text(data['title'] ?? '', style: TextStyle(fontSize: 15),),
+            child: Text(data['title'] ?? '', style: TextStyle(fontSize: 15)),
           ),
-          SizedBox(width: 8,),
+          SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (isPending) ...[
-                SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2,),)
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
               ] else if (isLocal) ...[
                 TextButton(
                   onPressed: () => gotoPlay(data['title'] ?? '', id),
                   style: TextButton.styleFrom(
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4,),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                   ),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.play_arrow_rounded, size: 20,),
-                    SizedBox(width: 4,),
-                    Text('播放'),
-                  ]),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.play_arrow_rounded, size: 20),
+                      SizedBox(width: 4),
+                      Text('播放'),
+                    ],
+                  ),
                 ),
               ] else
                 TextButton(
-                  onPressed: () => ref.read(audioProvider.notifier).downloadFile(data['url'], id),
+                  onPressed: () => ref
+                      .read(audioProvider.notifier)
+                      .downloadFile(data['url'], id, data['title'] ?? ''),
                   style: TextButton.styleFrom(
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4,),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                   ),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.file_download_outlined, size: 20,),
-                    SizedBox(width: 4,),
-                    Text('下載'),
-                  ]),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.file_download_outlined, size: 20),
+                      SizedBox(width: 4),
+                      Text('下載'),
+                    ],
+                  ),
                 ),
-              SizedBox(height: 4,),
+              SizedBox(height: 4),
               if (data['modified'] != null)
                 Text(
                   _formatDate(data['modified']),
@@ -183,7 +236,22 @@ class _ListPageState extends ConsumerState<ListPage> {
     final filePath = await ref.read(audioProvider.notifier).getFilePath(id);
     AudioService().setFile(filePath);
     if (!mounted) return;
-    Navigator.push(context, MaterialPageRoute(builder: (context) => PlayPage(title: title, id: "$id",)));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PlayPage(title: title, id: "$id"),
+      ),
+    );
+  }
+
+  Future<void> gotoLocal() async {
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LocalPage(),
+      ),
+    );
   }
 
   //endregion
